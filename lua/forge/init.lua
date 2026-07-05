@@ -72,31 +72,55 @@ local function open_terminal(args, persistent, name)
   end
 end
 
+--- Kill the persistent Anvil terminal, if one is running
+-- Force-deletes the buffer, which stops the underlying terminal job
+local function kill_anvil()
+  if M.anvil_buf and vim.api.nvim_buf_is_valid(M.anvil_buf) then
+    vim.api.nvim_buf_delete(M.anvil_buf, { force = true })
+    M.anvil_buf = nil
+    vim.notify("Anvil instance killed", vim.log.levels.INFO)
+  else
+    vim.notify("No running Anvil instance", vim.log.levels.WARN)
+  end
+end
+
 --- Setup the plugin and register user commands
 -- @param opts table Optional configuration table (currently supports allow_standalone)
 function M.setup(opts)
   M.config = vim.tbl_extend("force", M.config, opts or {})
 
   --- Helper to create a Neovim user command
-  -- @param name string Name of the command (e.g., "Forge")
-  -- @param cmd string Command to run in terminal (e.g., "forge")
+  -- @param name string Name of the command (e.g., "ForgeBuild")
+  -- @param base_args table List of strings: the command and fixed leading args (e.g., {"forge", "build"})
   -- @param persistent boolean Whether the buffer should be persistent
-  local function create_cmd(name, cmd, persistent)
+  -- @param buf_name string Name of the buffer to display in the split
+  local function create_cmd(name, base_args, persistent, buf_name)
     vim.api.nvim_create_user_command(name, function(options)
-      local args = {cmd}
+      local args = base_args
       if #options.fargs > 0 then
-        args = vim.tbl_flatten({cmd, unpack(options.fargs)})
+        args = vim.tbl_flatten({base_args, options.fargs})
       end
-      local buf_name = (cmd == "anvil") and "Anvil" or "Terminal Output"
       open_terminal(args, persistent, buf_name)
     end, { nargs = "*", complete = function() return {} end })
   end
 
   -- Register commands
-  create_cmd("Forge", "forge", false)
-  create_cmd("Cast", "cast", false)
-  create_cmd("Chisel", "chisel", false)
-  create_cmd("Anvil", "anvil", true)
+  create_cmd("Forge", {"forge"}, false, "Terminal Output")
+  create_cmd("Cast", {"cast"}, false, "Terminal Output")
+  create_cmd("Chisel", {"chisel"}, false, "Terminal Output")
+  create_cmd("Anvil", {"anvil"}, true, "Anvil")
+
+  vim.api.nvim_create_user_command("AnvilKill", kill_anvil, {
+    desc = "Kill the persistent Anvil terminal instance",
+  })
+
+  -- Common forge subcommands
+  create_cmd("ForgeBuild", {"forge", "build"}, false, "Terminal Output")
+  create_cmd("ForgeTest", {"forge", "test"}, false, "Terminal Output")
+  create_cmd("ForgeFmt", {"forge", "fmt"}, false, "Terminal Output")
+  create_cmd("ForgeClean", {"forge", "clean"}, false, "Terminal Output")
+  create_cmd("ForgeInstall", {"forge", "install"}, false, "Terminal Output")
+  create_cmd("ForgeUpdate", {"forge", "update"}, false, "Terminal Output")
 end
 
 return M
