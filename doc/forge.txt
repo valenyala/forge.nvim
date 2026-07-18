@@ -32,4 +32,7 @@ CONFIG                                   *forge-config*
 require("forge").setup({
   allow_standalone = true,
   split_direction = "top",  -- "top" | "bottom" | "left" | "right"
+  test_verbosity = 0,       -- 0-5; appends -v..-vvvvv to forge test
+                            -- commands (:ForgeTest, :ForgeTestMatch,
+                            -- :ForgeTestSelection). 0 = no flag.
 })

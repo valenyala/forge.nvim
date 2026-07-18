@@ -6,9 +6,11 @@ local M = {}
 --- Plugin configuration table
 -- @field allow_standalone boolean Whether to allow running commands in folders without foundry.toml
 -- @field split_direction string Where terminal splits open: "top", "bottom", "left" or "right"
+-- @field test_verbosity integer Verbosity for forge test commands, 0-5 (0 = no flag, 3 = -vvv, ...)
 M.config = {
   allow_standalone = false,
   split_direction = "top",
+  test_verbosity = 0,
 }
 
 --- Modifier commands for each split direction
@@ -139,6 +141,17 @@ local function kill_anvil()
   end
 end
 
+--- Base args for `forge test`, including the configured verbosity flag
+-- @return table e.g. {"forge", "test"} or {"forge", "test", "-vvv"}
+local function test_base_args()
+  local args = { "forge", "test" }
+  local v = tonumber(M.config.test_verbosity) or 0
+  if v > 0 then
+    table.insert(args, "-" .. string.rep("v", math.min(v, 5)))
+  end
+  return args
+end
+
 --- Run `forge test --mt <name>` for a given test function name
 -- @param name string|nil Name of the test function to match
 local function run_match_test(name)
@@ -146,7 +159,9 @@ local function run_match_test(name)
     vim.notify("No test function name provided", vim.log.levels.WARN)
     return
   end
-  open_terminal({ "forge", "test", "--mt", name }, false, "Terminal Output")
+  local args = test_base_args()
+  vim.list_extend(args, { "--mt", name })
+  open_terminal(args, false, "Terminal Output")
 end
 
 --- Get the text of the last visual selection (marks '< and '>)
@@ -172,12 +187,14 @@ function M.setup(opts)
 
   --- Helper to create a Neovim user command
   -- @param name string Name of the command (e.g., "ForgeBuild")
-  -- @param base_args table List of strings: the command and fixed leading args (e.g., {"forge", "build"})
+  -- @param base_args table|function List of strings: the command and fixed leading args
+  --        (e.g., {"forge", "build"}), or a function returning such a list
   -- @param persistent boolean Whether the buffer should be persistent
   -- @param buf_name string Name of the buffer to display in the split
   local function create_cmd(name, base_args, persistent, buf_name)
     vim.api.nvim_create_user_command(name, function(options)
-      local args = vim.list_extend({}, base_args)
+      local base = type(base_args) == "function" and base_args() or base_args
+      local args = vim.list_extend({}, base)
       vim.list_extend(args, options.fargs)
       open_terminal(args, persistent, buf_name)
     end, { nargs = "*", complete = function() return {} end })
@@ -195,7 +212,7 @@ function M.setup(opts)
 
   -- Common forge subcommands
   create_cmd("ForgeBuild", {"forge", "build"}, false, "Terminal Output")
-  create_cmd("ForgeTest", {"forge", "test"}, false, "Terminal Output")
+  create_cmd("ForgeTest", test_base_args, false, "Terminal Output")
 
   -- Run a single test function: `:ForgeTestMatch testFoo`, or no args to be prompted
   vim.api.nvim_create_user_command("ForgeTestMatch", function(options)
