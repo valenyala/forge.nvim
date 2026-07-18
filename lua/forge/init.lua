@@ -141,6 +141,17 @@ local function kill_anvil()
   end
 end
 
+--- Args of the most recent test run, replayed by :ForgeTestLast
+-- @type table|nil
+M.last_test_args = nil
+
+--- Run a forge test command, remembering its args for :ForgeTestLast
+-- @param args table Full command args (e.g. {"forge", "test", "--mt", "testFoo"})
+local function run_test(args)
+  M.last_test_args = args
+  open_terminal(args, false, "Terminal Output")
+end
+
 --- Run `forge test --mt <name>` for a given test function name,
 --- with the configured match_verbosity flag
 -- @param name string|nil Name of the test function to match
@@ -155,7 +166,7 @@ local function run_match_test(name)
     table.insert(args, "-" .. string.rep("v", math.min(v, 5)))
   end
   vim.list_extend(args, { "--mt", name })
-  open_terminal(args, false, "Terminal Output")
+  run_test(args)
 end
 
 --- Get the text of the last visual selection (marks '< and '>)
@@ -204,7 +215,12 @@ function M.setup(opts)
 
   -- Common forge subcommands
   create_cmd("ForgeBuild", {"forge", "build"}, false, "Terminal Output")
-  create_cmd("ForgeTest", {"forge", "test"}, false, "Terminal Output")
+  -- ForgeTest goes through run_test so :ForgeTestLast can replay it
+  vim.api.nvim_create_user_command("ForgeTest", function(options)
+    local args = { "forge", "test" }
+    vim.list_extend(args, options.fargs)
+    run_test(args)
+  end, { nargs = "*", complete = function() return {} end })
 
   -- Run a single test function: `:ForgeTestMatch testFoo`, or no args to be prompted
   vim.api.nvim_create_user_command("ForgeTestMatch", function(options)
@@ -221,6 +237,15 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("ForgeTestSelection", function()
     run_match_test(get_visual_selection())
   end, { range = true, desc = "Run forge test --mt on the visually selected text" })
+
+  -- Replay the most recent ForgeTest/ForgeTestMatch/ForgeTestSelection run
+  vim.api.nvim_create_user_command("ForgeTestLast", function()
+    if M.last_test_args then
+      open_terminal(M.last_test_args, false, "Terminal Output")
+    else
+      vim.notify("No previous test run to replay", vim.log.levels.WARN)
+    end
+  end, { desc = "Replay the last forge test run" })
   create_cmd("ForgeFmt", {"forge", "fmt"}, false, "Terminal Output")
   create_cmd("ForgeClean", {"forge", "clean"}, false, "Terminal Output")
   create_cmd("ForgeInstall", {"forge", "install"}, false, "Terminal Output")

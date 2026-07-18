@@ -22,6 +22,8 @@ COMMANDS                                *forge-commands*
 :ForgeTestSelection
                    Visual mode: run forge test --mt on the
                    selected word
+:ForgeTestLast     Replay the most recent ForgeTest,
+                   ForgeTestMatch or ForgeTestSelection run
 :ForgeFmt [args]   Run forge fmt
 :ForgeClean [args] Run forge clean
 :ForgeInstall [args] Run forge install

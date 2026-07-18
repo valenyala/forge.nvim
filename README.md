@@ -41,6 +41,7 @@ return {
 | `:ForgeTest <args...>`    | Run `forge test`                      | Wipe on close                      |
 | `:ForgeTestMatch [name]`  | Run `forge test --mt <name>` (prompts if no name given) | Wipe on close    |
 | `:ForgeTestSelection`     | Visual mode: run `forge test --mt` on the selected word | Wipe on close    |
+| `:ForgeTestLast`          | Replay the most recent test run       | Wipe on close                      |
 | `:ForgeFmt <args...>`     | Run `forge fmt`                       | Wipe on close                      |
 | `:ForgeClean <args...>`   | Run `forge clean`                     | Wipe on close                      |
 | `:ForgeInstall <args...>` | Run `forge install`                   | Wipe on close                      |
