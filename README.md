@@ -52,7 +52,7 @@ return {
 require("forge").setup({
   allow_standalone = true,   -- allows running commands outside of a foundry project
   split_direction = "right", -- where the terminal opens: "top" (default), "bottom", "left", "right"
-  test_verbosity = 3,        -- 0-5, appends -v..-vvvvv to forge test commands (0 = no flag, default)
+  match_verbosity = 4,       -- 0-5, appends -v..-vvvvv to ForgeTestMatch/ForgeTestSelection (default 4, 0 = no flag)
 })
 ```
 
