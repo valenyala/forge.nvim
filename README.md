@@ -8,7 +8,7 @@ A minimal Neovim plugin to run Foundry commands. Supports `Forge`, `Cast`, `Chis
 
 ## Features
 
-* Opens Foundry commands in a **top-half split terminal**.
+* Opens Foundry commands in a **split terminal** (top by default; configurable via `split_direction`).
 * Ephemeral buffers (`Forge`, `Cast`, `Chisel`) **wipe on close**.
 * Persistent buffer (`Anvil`) **reuses the same split**.
 * Automatically detects project root via `foundry.toml`.
@@ -39,6 +39,8 @@ return {
 | `:AnvilKill`              | Kill the running `anvil` instance     | -                                   |
 | `:ForgeBuild <args...>`   | Run `forge build`                     | Wipe on close                      |
 | `:ForgeTest <args...>`    | Run `forge test`                      | Wipe on close                      |
+| `:ForgeTestMatch [name]`  | Run `forge test --mt <name>` (prompts if no name given) | Wipe on close    |
+| `:ForgeTestSelection`     | Visual mode: run `forge test --mt` on the selected word | Wipe on close    |
 | `:ForgeFmt <args...>`     | Run `forge fmt`                       | Wipe on close                      |
 | `:ForgeClean <args...>`   | Run `forge clean`                     | Wipe on close                      |
 | `:ForgeInstall <args...>` | Run `forge install`                   | Wipe on close                      |
@@ -46,14 +48,14 @@ return {
 
 ## Configuration
 
-Only one optional configuration:
-
 ```lua
 require("forge").setup({
-  allow_standalone = true, -- allows running commands outside of a foundry project
+  allow_standalone = true,   -- allows running commands outside of a foundry project
+  split_direction = "right", -- where the terminal opens: "top" (default), "bottom", "left", "right"
 })
 ```
 
 ## Notes
 
 * `Anvil` is persistent; running `:Anvil` again will **reuse the same buffer**.
+* Running another `Forge`/`Cast`/`Chisel` command while the output split is open **reuses that split**, replacing the previous output (and stopping its process).

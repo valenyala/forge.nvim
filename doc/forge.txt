@@ -16,6 +16,12 @@ COMMANDS                                *forge-commands*
 :AnvilKill         Kill the running Anvil instance
 :ForgeBuild [args] Run forge build
 :ForgeTest [args]  Run forge test
+:ForgeTestMatch [name]
+                   Run forge test --mt <name>; prompts for the
+                   test function name when called without one
+:ForgeTestSelection
+                   Visual mode: run forge test --mt on the
+                   selected word
 :ForgeFmt [args]   Run forge fmt
 :ForgeClean [args] Run forge clean
 :ForgeInstall [args] Run forge install
@@ -24,5 +30,6 @@ COMMANDS                                *forge-commands*
 CONFIG                                   *forge-config*
 
 require("forge").setup({
-  allow_standalone = true
+  allow_standalone = true,
+  split_direction = "top",  -- "top" | "bottom" | "left" | "right"
 })
